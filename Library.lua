@@ -4112,7 +4112,7 @@ function BaseGroupbox:AddViewport(Idx, Info)
         Yaw = 0,
         Pitch = -15,
         Distance = 10,
-        Focus = Vector3.zero,
+        FocusPoint = Vector3.zero,
     }
     local Holder = MakeRow(self, Viewport.Height)
     Viewport.Holder = Holder
@@ -4136,7 +4136,7 @@ function BaseGroupbox:AddViewport(Idx, Info)
 
     local function ApplyCamera()
         local Rotation = CFrame.Angles(0, math.rad(Viewport.Yaw), 0) * CFrame.Angles(math.rad(Viewport.Pitch), 0, 0)
-        Camera.CFrame = CFrame.new(Viewport.Focus) * Rotation * CFrame.new(0, 0, Viewport.Distance)
+        Camera.CFrame = CFrame.new(Viewport.FocusPoint) * Rotation * CFrame.new(0, 0, Viewport.Distance)
     end
 
     function Viewport:SetObject(Object, Clone)
@@ -4154,6 +4154,12 @@ function BaseGroupbox:AddViewport(Idx, Info)
             Object.Archivable = true
             Object = Object:Clone()
             Object.Archivable = Archivable
+            -- Don't let cloned scripts (e.g. a character's Animate script) run inside the viewport
+            for _, Descendant in ipairs(Object:GetDescendants()) do
+                if Descendant:IsA("BaseScript") then
+                    Descendant:Destroy()
+                end
+            end
         end
         Object.Parent = Frame
         Viewport.Object = Object
@@ -4174,7 +4180,7 @@ function BaseGroupbox:AddViewport(Idx, Info)
         else
             Center, Size = Object.Position, Object.Size
         end
-        Viewport.Focus = Center
+        Viewport.FocusPoint = Center
         local Radius = Size.Magnitude / 2
         Viewport.Distance = Radius / math.tan(math.rad(Camera.FieldOfView / 2)) + Radius * 0.25
         ApplyCamera()
@@ -4202,7 +4208,7 @@ function BaseGroupbox:AddViewport(Idx, Info)
         ApplyCamera()
     end
     function Viewport:LookAt(Position)
-        Viewport.Focus = Position
+        Viewport.FocusPoint = Position
         ApplyCamera()
     end
     function Viewport:SetDistance(Distance)
